@@ -7,9 +7,9 @@ Tibar is barcode module for iPhone using Zbar and a fork of the project hosted a
 PREREQUISITES
 -------------
 
-Titanium Mobile SDK 1.4.2
-iOS SDK 4.1
-iPhone 3GS or higher (other devices: wip)
+* Titanium Mobile SDK 1.4.2
+* iOS SDK 4.1
+* iPhone 3GS or higher
 
 
 INSTALL BUILT MODULE
