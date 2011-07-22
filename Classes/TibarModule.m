@@ -97,9 +97,9 @@
 }
 
 
--(void)scan:(id)args
+-(void)init:(id)args
 {
-	ENSURE_UI_THREAD(scan,args);
+	ENSURE_UI_THREAD(init,args);
 	ENSURE_SINGLE_ARG_OR_NIL(args,NSDictionary);
 	[self scanButtonTapped: (id)args];
 }
@@ -236,6 +236,13 @@
 											  to: [code boolValue]];
 				}	
 			}
+            
+            // overlay
+			if ([configure objectForKey:@"overlay"] != nil){
+                TiViewProxy* viewProxy = (TiViewProxy*) [configure objectForKey:@"overlay"];
+                reader.cameraOverlayView = viewProxy.view;
+            }
+            
 		}
 		
 		// callbacks
@@ -255,12 +262,30 @@
 			pickerCancelCallback = [args objectForKey:@"cancel"];
 			ENSURE_TYPE_OR_NIL(pickerCancelCallback,KrollCallback);
 			[pickerCancelCallback retain];
-		}
-		
-		// show
-		TiApp * tiApp = [TiApp app];
-		[tiApp showModalController:reader animated:YES];		
+		}	
 	}
+}
+
+- (void) scan: (id)args {
+	ENSURE_UI_THREAD(scan,args);
+    if(reader != nil) {
+        TiApp * tiApp = [TiApp app];
+        [tiApp showModalController:reader animated:YES];	
+    }
+}
+
+- (void) closeScanner: (id)args {
+	ENSURE_UI_THREAD(closeScanner,args);
+    [reader dismissModalViewControllerAnimated: YES];
+}
+
+- (void) showHelp: (id)reason {
+	ENSURE_UI_THREAD(showHelp,reason);
+	ENSURE_SINGLE_ARG_OR_NIL(reason,NSString);
+    if (!reason) {
+        reason = @"INFO";
+    }
+    [reader showHelpWithReason:reason];
 }
 
 // ZBarReaderDelegate
@@ -269,9 +294,6 @@
  didFinishPickingMediaWithInfo: (NSDictionary*) info
 {
     
-    //UIImage *image =
-    //  [info objetForKey: UIImagePickerControllerOriginalImage];
-	
     // get the results
     id <NSFastEnumeration> results = [info objectForKey: ZBarReaderControllerResults];
     
@@ -286,7 +308,12 @@
 		
 		NSMutableDictionary *dictionary = [NSMutableDictionary dictionary];
 		[dictionary setObject:symbol.data forKey:@"barcode"];
-		[dictionary setObject:symbol.typeName forKey:@"symbology"];		
+		[dictionary setObject:symbol.typeName forKey:@"symbology"];	
+        
+       UIImage *image = [info objectForKey: UIImagePickerControllerOriginalImage];
+        if(image){
+            [dictionary setObject:[[[TiBlob alloc] initWithImage:image] autorelease] forKey:@"image"];		
+        }
 		[self _fireEventToListener:@"success" withObject:dictionary listener:listener thisObject:nil];	
 	}
 	
@@ -323,23 +350,6 @@
 	
 	//if(!retry)
 	[_reader dismissModalViewControllerAnimated: YES];
-}
-
--(id)example:(id)args
-{
-	// example method
-	return @"hello world";
-}
-
--(id)exampleProp
-{
-	// example property getter
-	return @"hello world";
-}
-
--(void)exampleProp:(id)value
-{
-	// example property setter
 }
 
 @end
